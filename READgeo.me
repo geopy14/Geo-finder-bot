@@ -1,0 +1,46 @@
+import tweepy
+from geopy.geocoders import Nominatim
+
+# مفاتيح API من بوابة تويتر للمطورين
+consumer_key = "ضع_هنا"
+consumer_secret = "ضع_هنا"
+access_token = "ضع_هنا"
+access_token_secret = "ضع_هنا"
+
+# المصادقة
+auth = tweepy.OAuth1UserHandler(consumer_key, consumer_secret, access_token, access_token_secret)
+api = tweepy.API(auth)
+
+# المدن المحتملة
+cities = ["الرياض", "جدة", "مكة", "المدينة", "الدمام", "أبها", "نجران", "القصيم", "الخبر", "حائل", "الطائف", "تبوك"]
+
+# أداة تحديد الموقع
+geolocator = Nominatim(user_agent="geoFinderBot")
+
+# سحب التغريدات
+def get_tweets(username, count=100):
+    tweets = api.user_timeline(screen_name=username, count=count, tweet_mode='extended')
+    return [tweet.full_text for tweet in tweets]
+
+# استخراج الموقع
+def extract_location(tweet_text):
+    for city in cities:
+        if city in tweet_text:
+            location = geolocator.geocode(city + ", Saudi Arabia")
+            if location:
+                return (city, location.latitude, location.longitude)
+    return None
+
+# دمج كامل
+def analyze_user_location(username):
+    tweets = get_tweets(username)
+    for tweet in tweets:
+        location = extract_location(tweet)
+        if location:
+            print(f"📍 الموقع المحتمل: {location[0]}")
+            print(f"📌 الإحداثيات: {location[1]}, {location[2]}")
+            return
+    print("❌ لم يتم العثور على موقع ضمن التغريدات.")
+
+# مثال تشغيل
+analyze_user_location("اسم_الحساب")
